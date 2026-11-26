@@ -67,7 +67,7 @@
           ],
           "method": "GET",
           "origin": "https://qwen-opencode-h200.amotivv.containers.tinfoil.dev",
-          "path": "/qualification",
+          "path": "/v1/qualification",
           "body": "none",
           "scope": {},
           "sends": "connection"

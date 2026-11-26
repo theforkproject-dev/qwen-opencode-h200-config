@@ -68,7 +68,7 @@ class Handler(BaseHTTPRequestHandler):
    except Exception:self.reply(503,{'ready':False})
    finally:c.close()
    return
-  if self.path=='/qualification' and self.requestline.split(' ')[1]=='/qualification':
+  if self.path=='/v1/qualification' and self.requestline.split(' ')[1]=='/v1/qualification':
    if not self.auth():self.reply(401,{'error':'unauthorized'});return
    c=http.client.HTTPConnection(os.environ.get('QWEN_QUALIFIER','model:8002'),timeout=10)
    try:
