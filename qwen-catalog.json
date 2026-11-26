@@ -1,0 +1,93 @@
+{
+  "qwen_h200": {
+    "title": "Qwen specialist, own second H200",
+    "catalog": {
+      "group": "api",
+      "actions": {
+        "qwen.models": {
+          "title": "qwen.models"
+        },
+        "qwen.generate": {
+          "title": "qwen.generate"
+        },
+        "qwen.qualify": {
+          "title": "qwen.qualify"
+        },
+        "qwen.attestation": {
+          "title": "qwen.attestation"
+        }
+      },
+      "connection": {
+        "tinfoil": {
+          "enclave": "qwen-opencode-h200.amotivv.containers.tinfoil.dev",
+          "repo": "theforkproject-dev/qwen-opencode-h200-config@v0.0.1"
+        }
+      },
+      "fields": [
+        {
+          "key": "TINFOIL_API_KEY",
+          "label": "Qwen-only client credential, not hosted Tinfoil inference",
+          "credential": true,
+          "secret": true
+        }
+      ]
+    },
+    "http": {
+      "slots": true,
+      "operations": {
+        "qwen.models": {
+          "action": "qwen.models",
+          "effects": [
+            "read"
+          ],
+          "method": "GET",
+          "origin": "https://qwen-opencode-h200.amotivv.containers.tinfoil.dev",
+          "path": "/v1/models",
+          "body": "none",
+          "scope": {},
+          "sends": "connection"
+        },
+        "qwen.generate": {
+          "action": "qwen.generate",
+          "effects": [
+            "generate",
+            "send"
+          ],
+          "method": "POST",
+          "origin": "https://qwen-opencode-h200.amotivv.containers.tinfoil.dev",
+          "path": "/v1/chat/completions",
+          "body": "json",
+          "scope": {},
+          "sends": "connection"
+        },
+        "qwen.qualify": {
+          "action": "qwen.qualify",
+          "effects": [
+            "read"
+          ],
+          "method": "GET",
+          "origin": "https://qwen-opencode-h200.amotivv.containers.tinfoil.dev",
+          "path": "/qualification",
+          "body": "none",
+          "scope": {},
+          "sends": "connection"
+        },
+        "qwen.attestation": {
+          "action": "qwen.attestation",
+          "effects": [
+            "read"
+          ],
+          "method": "GET",
+          "origin": "https://qwen-opencode-h200.amotivv.containers.tinfoil.dev",
+          "path": "/.well-known/tinfoil-attestation",
+          "params": [
+            "nonce"
+          ],
+          "body": "none",
+          "scope": {},
+          "sends": "connection"
+        }
+      }
+    }
+  }
+}
