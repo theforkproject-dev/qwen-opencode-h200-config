@@ -34,7 +34,7 @@ class Tests(unittest.TestCase):
   for m in ['PUT','DELETE','PATCH','HEAD','OPTIONS']:self.assertEqual(call(m)[0],405)
  def test_invalid(self):
   basic={'model':gateway.MODEL,'messages':[{'role':'user','content':'x'}]}
-  bad=[[],{},dict(basic,model='fake'),dict(basic,stream=1),dict(basic,max_tokens=8193),dict(basic,max_tokens=True),dict(basic,max_tokens=0),dict(basic,max_tokens=2,max_completion_tokens=2),dict(basic,chat_template_kwargs={'enable_thinking':True}),dict(basic,extra_body={}),dict(basic,messages=[{'role':'user','content':[{'type':'image_url','image_url':{'url':'https://example.com'}}]}]),dict(basic,tools=[{'type':'web_search'}])]
+  bad=[[],{},dict(basic,model='fake'),dict(basic,stream=1),dict(basic,max_tokens=16385),dict(basic,max_tokens=True),dict(basic,max_tokens=0),dict(basic,max_tokens=2,max_completion_tokens=2),dict(basic,chat_template_kwargs={'enable_thinking':True}),dict(basic,extra_body={}),dict(basic,messages=[{'role':'user','content':[{'type':'image_url','image_url':{'url':'https://example.com'}}]}]),dict(basic,tools=[{'type':'web_search'}])]
   for b in bad:self.assertEqual(call(b=b)[0],400,str(b))
   for raw in ['{"model":"a","model":"b"}', '{"x":NaN}', '{}garbage', '\ufffd']:
    self.assertEqual(call(raw=raw.encode('utf-8'))[0],400)
@@ -43,11 +43,15 @@ class Tests(unittest.TestCase):
   self.assertEqual(call(raw='{}',headers={'Content-Type':'text/plain'})[0],415)
   self.assertEqual(call(raw='{}',headers={'Content-Encoding':'gzip'})[0],400)
  def test_positive_and_defaults(self):
-  self.assertEqual(call()[0],200);x=SEEN[-1];self.assertIsNone(x['authorization']);self.assertEqual(x['body']['max_tokens'],8192);self.assertEqual(x['body']['chat_template_kwargs'],{'enable_thinking':False})
+  self.assertEqual(call()[0],200);x=SEEN[-1];self.assertIsNone(x['authorization']);self.assertEqual(x['body']['max_tokens'],16384);self.assertEqual(x['body']['chat_template_kwargs'],{'enable_thinking':False})
  def test_stream(self):
   b={'model':gateway.MODEL,'messages':[{'role':'user','content':'x'}],'stream':True};r=call(b=b);self.assertEqual(r[0],200);self.assertEqual(r[1],b'data: {"choices":[]}\n\ndata: [DONE]\n\n')
  def test_busy(self):
-  b={'model':gateway.MODEL,'messages':[{'role':'user','content':'wait'}]};t=threading.Thread(target=lambda:call(b=b));t.start();time.sleep(.1);self.assertEqual(call()[0],429);t.join();self.assertEqual(call()[0],200)
+  b={'model':gateway.MODEL,'messages':[{'role':'user','content':'wait'}]};out=[];threads=[threading.Thread(target=lambda:out.append(call(b=b)[0])) for _ in range(2)]
+  for t in threads:t.start()
+  time.sleep(.2);self.assertEqual(call()[0],429)
+  for t in threads:t.join()
+  self.assertEqual(out,[200,200]);self.assertEqual(call()[0],200)
  def test_function_unicode(self):
   b={'model':gateway.MODEL,'messages':[{'role':'user','content':'\u03b1\n"quoted"'},{'role':'assistant','content':None,'tool_calls':[{'id':'x','type':'function','function':{'name':'read','arguments':'{"x":"a\\nb"}'}}]},{'role':'tool','tool_call_id':'x','content':'done'}],'tools':[{'type':'function','function':{'name':'read','parameters':{'type':'object','properties':{'x':{'type':'string'}}}}}],'max_completion_tokens':512}
   self.assertEqual(call(b=b)[0],200);self.assertEqual(SEEN[-1]['body']['max_tokens'],512)

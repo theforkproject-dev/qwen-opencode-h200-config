@@ -1,13 +1,13 @@
-"""Exact-route, text-only, single-generation gateway. No content/credential logging."""
+"""Exact-route, text-only, two-generation gateway. No content/credential logging."""
 import hashlib,hmac,http.client,json,os,socket,threading,time
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 MODEL='qwen3.8-opencode'
 MAX_BODY=4*1024*1024
-MAX_OUTPUT=8192
+MAX_OUTPUT=16384
 KEY_HASH=os.environ['QWEN_KEY_SHA256']
 BACKEND=os.environ.get('QWEN_BACKEND','model:8000')
 assert len(KEY_HASH)==64 and all(c in '0123456789abcdef' for c in KEY_HASH)
-active=threading.BoundedSemaphore(1)
+active=threading.BoundedSemaphore(2)
 
 def unique(pairs):
  d={}
@@ -93,7 +93,7 @@ class Handler(BaseHTTPRequestHandler):
    if len(raw)!=n:raise ValueError('short body')
    b=validate(json.loads(raw,object_pairs_hook=unique,parse_constant=lambda x:(_ for _ in ()).throw(ValueError('nonfinite'))))
   except (ValueError,UnicodeError,socket.timeout):self.reply(400,{'error':'invalid or prohibited request'});return
-  if not active.acquire(blocking=False):self.reply(429,{'error':'one generation already active'});return
+  if not active.acquire(blocking=False):self.reply(429,{'error':'two generations already active'});return
   c=http.client.HTTPConnection(BACKEND,timeout=900);begun=False
   try:
    c.request('POST','/v1/chat/completions',json.dumps(b,separators=(',',':')),{'Content-Type':'application/json','Connection':'close'})

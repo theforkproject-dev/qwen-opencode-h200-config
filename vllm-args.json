@@ -12,9 +12,9 @@
   "1",
   "--language-model-only",
   "--max-model-len",
-  "32768",
+  "131072",
   "--max-num-seqs",
-  "1",
+  "2",
   "--gpu-memory-utilization",
   "0.85",
   "--disable-extensible-kv-cache",
@@ -36,7 +36,7 @@
   "--generation-config",
   "vllm",
   "--override-generation-config",
-  "{\"temperature\":0.8,\"top_p\":1.0,\"top_k\":20,\"max_new_tokens\":8192}",
+  "{\"temperature\":0.8,\"top_p\":1.0,\"top_k\":20,\"max_new_tokens\":16384}",
   "--max-num-batched-tokens",
   "8192"
 ]

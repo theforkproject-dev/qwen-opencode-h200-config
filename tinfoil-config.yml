@@ -17,11 +17,11 @@ containers:
   - -u
   - -c
   command:
-  - "\"\"\"Exact-route, text-only, single-generation gateway. No content/credential logging.\"\"\"\nimport\
+  - "\"\"\"Exact-route, text-only, two-generation gateway. No content/credential logging.\"\"\"\nimport\
     \ hashlib,hmac,http.client,json,os,socket,threading,time\nfrom http.server import BaseHTTPRequestHandler,ThreadingHTTPServer\n\
-    MODEL='qwen3.8-opencode'\nMAX_BODY=4*1024*1024\nMAX_OUTPUT=8192\nKEY_HASH=os.environ['QWEN_KEY_SHA256']\n\
+    MODEL='qwen3.8-opencode'\nMAX_BODY=4*1024*1024\nMAX_OUTPUT=16384\nKEY_HASH=os.environ['QWEN_KEY_SHA256']\n\
     BACKEND=os.environ.get('QWEN_BACKEND','model:8000')\nassert len(KEY_HASH)==64 and all(c in '0123456789abcdef'\
-    \ for c in KEY_HASH)\nactive=threading.BoundedSemaphore(1)\n\ndef unique(pairs):\n d={}\n for k,v\
+    \ for c in KEY_HASH)\nactive=threading.BoundedSemaphore(2)\n\ndef unique(pairs):\n d={}\n for k,v\
     \ in pairs:\n  if k in d:raise ValueError('duplicate key')\n  d[k]=v\n return d\n\ndef validate(b):\n\
     \ if not isinstance(b,dict):raise ValueError('object required')\n fields={'model','messages','tools','tool_choice','parallel_tool_calls','stream','stream_options','temperature','top_p','top_k','max_tokens','max_completion_tokens','stop','seed','presence_penalty','frequency_penalty','repetition_penalty','chat_template_kwargs','response_format','reasoning_effort'}\n\
     \ if set(b)-fields:raise ValueError('unsupported field')\n if b.get('model')!=MODEL:raise ValueError('unknown\
@@ -66,8 +66,8 @@ containers:
     \ length'});return\n  if not 0<n<=MAX_BODY:self.reply(413,{'error':'body limit'});return\n  try:\n\
     \   raw=self.rfile.read(n)\n   if len(raw)!=n:raise ValueError('short body')\n   b=validate(json.loads(raw,object_pairs_hook=unique,parse_constant=lambda\
     \ x:(_ for _ in ()).throw(ValueError('nonfinite'))))\n  except (ValueError,UnicodeError,socket.timeout):self.reply(400,{'error':'invalid\
-    \ or prohibited request'});return\n  if not active.acquire(blocking=False):self.reply(429,{'error':'one\
-    \ generation already active'});return\n  c=http.client.HTTPConnection(BACKEND,timeout=900);begun=False\n\
+    \ or prohibited request'});return\n  if not active.acquire(blocking=False):self.reply(429,{'error':'two\
+    \ generations already active'});return\n  c=http.client.HTTPConnection(BACKEND,timeout=900);begun=False\n\
     \  try:\n   c.request('POST','/v1/chat/completions',json.dumps(b,separators=(',',':')),{'Content-Type':'application/json','Connection':'close'})\n\
     \   r=c.getresponse();self.send_response(r.status);begun=True\n   self.send_header('Content-Type',r.getheader('Content-Type','application/json'));self.send_header('Cache-Control','no-store');self.send_header('X-Accel-Buffering','no');self.end_headers()\n\
     \   total=0\n   while True:\n    buf=r.read1(65536)\n    if not buf:break\n    total+=len(buf)\n \
@@ -192,15 +192,15 @@ containers:
     \ '\"'\"'--served-model-name'\"'\"', '\"'\"'qwen3.8-opencode'\"'\"', '\"'\"'--tokenizer'\"'\"', '\"\
     '\"'/tinfoil/models/qwen-adapter'\"'\"', '\"'\"'--dtype'\"'\"', '\"'\"'bfloat16'\"'\"', '\"'\"'--tensor-parallel-size'\"\
     '\"', '\"'\"'1'\"'\"', '\"'\"'--language-model-only'\"'\"', '\"'\"'--max-model-len'\"'\"', '\"'\"\
-    '32768'\"'\"', '\"'\"'--max-num-seqs'\"'\"', '\"'\"'1'\"'\"', '\"'\"'--gpu-memory-utilization'\"'\"\
-    ', '\"'\"'0.85'\"'\"', '\"'\"'--disable-extensible-kv-cache'\"'\"', '\"'\"'--enable-prefix-caching'\"\
+    '131072'\"'\"', '\"'\"'--max-num-seqs'\"'\"', '\"'\"'2'\"'\"', '\"'\"'--gpu-memory-utilization'\"\
+    '\"', '\"'\"'0.85'\"'\"', '\"'\"'--disable-extensible-kv-cache'\"'\"', '\"'\"'--enable-prefix-caching'\"\
     '\"', '\"'\"'--enable-auto-tool-choice'\"'\"', '\"'\"'--tool-call-parser'\"'\"', '\"'\"'qwen3_xml'\"\
     '\"', '\"'\"'--reasoning-parser'\"'\"', '\"'\"'qwen3'\"'\"', '\"'\"'--default-chat-template-kwargs'\"\
     '\"', '\"'\"'{\"enable_thinking\":false}'\"'\"', '\"'\"'--host'\"'\"', '\"'\"'0.0.0.0'\"'\"', '\"\
     '\"'--port'\"'\"', '\"'\"'8000'\"'\"', '\"'\"'--disable-log-requests'\"'\"', '\"'\"'--disable-log-outputs'\"\
     '\"', '\"'\"'--disable-uvicorn-access-log'\"'\"', '\"'\"'--generation-config'\"'\"', '\"'\"'vllm'\"\
     '\"', '\"'\"'--override-generation-config'\"'\"', '\"'\"'{\"temperature\":0.8,\"top_p\":1.0,\"top_k\"\
-    :20,\"max_new_tokens\":8192}'\"'\"', '\"'\"'--max-num-batched-tokens'\"'\"', '\"'\"'8192'\"'\"'])\n\
+    :20,\"max_new_tokens\":16384}'\"'\"', '\"'\"'--max-num-batched-tokens'\"'\"', '\"'\"'8192'\"'\"'])\n\
     ' > /tmp/model.log 2>&1; echo $? > /tmp/launch-exit; sleep 1800"
   memory: 118g
   shm_size: 8g
