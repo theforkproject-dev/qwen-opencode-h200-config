@@ -19,7 +19,7 @@ containers:
   command:
   - "\"\"\"Exact-route, text-only, two-generation gateway. No content/credential logging.\"\"\"\nimport\
     \ hashlib,hmac,http.client,json,os,socket,threading,time\nfrom http.server import BaseHTTPRequestHandler,ThreadingHTTPServer\n\
-    MODEL='qwen3.8-opencode'\nMAX_BODY=4*1024*1024\nMAX_OUTPUT=16384\nKEY_HASH=os.environ['QWEN_KEY_SHA256']\n\
+    MODEL='qwen3.8-opencode'\nMAX_BODY=4*1024*1024\nMAX_OUTPUT=32768\nKEY_HASH=os.environ['QWEN_KEY_SHA256']\n\
     BACKEND=os.environ.get('QWEN_BACKEND','model:8000')\nassert len(KEY_HASH)==64 and all(c in '0123456789abcdef'\
     \ for c in KEY_HASH)\nactive=threading.BoundedSemaphore(2)\n\ndef unique(pairs):\n d={}\n for k,v\
     \ in pairs:\n  if k in d:raise ValueError('duplicate key')\n  d[k]=v\n return d\n\ndef validate(b):\n\
@@ -200,7 +200,7 @@ containers:
     '\"'--port'\"'\"', '\"'\"'8000'\"'\"', '\"'\"'--disable-log-requests'\"'\"', '\"'\"'--disable-log-outputs'\"\
     '\"', '\"'\"'--disable-uvicorn-access-log'\"'\"', '\"'\"'--generation-config'\"'\"', '\"'\"'vllm'\"\
     '\"', '\"'\"'--override-generation-config'\"'\"', '\"'\"'{\"temperature\":0.8,\"top_p\":1.0,\"top_k\"\
-    :20,\"max_new_tokens\":16384}'\"'\"', '\"'\"'--max-num-batched-tokens'\"'\"', '\"'\"'8192'\"'\"'])\n\
+    :20,\"max_new_tokens\":32768}'\"'\"', '\"'\"'--max-num-batched-tokens'\"'\"', '\"'\"'8192'\"'\"'])\n\
     ' > /tmp/model.log 2>&1; echo $? > /tmp/launch-exit; sleep 1800"
   memory: 118g
   shm_size: 8g

@@ -3,7 +3,7 @@ import hashlib,hmac,http.client,json,os,socket,threading,time
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 MODEL='qwen3.8-opencode'
 MAX_BODY=4*1024*1024
-MAX_OUTPUT=16384
+MAX_OUTPUT=32768
 KEY_HASH=os.environ['QWEN_KEY_SHA256']
 BACKEND=os.environ.get('QWEN_BACKEND','model:8000')
 assert len(KEY_HASH)==64 and all(c in '0123456789abcdef' for c in KEY_HASH)
